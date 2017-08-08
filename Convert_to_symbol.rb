@@ -1,45 +1,45 @@
 # encoding: utf-8
 
 LAMBDA_START = '__="_"=~/$/;_=__+__;->(&___){___["", ""<<((_+__)*_*_*_+__)*_*_+__<<((((_+__)*_+__)*_*_+__)*_+__)*_<<(_+__)*_*_*_*_*_+__<<(((_+__)*_*_+__)*_+__)*_*_,"#{""'.freeze
-LAMBDA_START.freeze
 LAMBDA_END = '}"]}[&:"#{""<<(((_+__)*_+__)*_*_*_+__)*_+__<<((_+__)*_*_*_+__)*_*_+__<<(((_+__)*_*_+__)*_+__)*_*_+_<<((_+__)*_*_*_+__)*_*_}"]'.freeze
-LAMBDA_END.freeze
 
 class Converter
   def initialize(filename)
-    @filename = filename
+    @filename = filename.dup
     @body_of_program = ''
+    @converted_program = ''
   end
 
   def run
     read_file
     convert
+    write_file
   end
 
   private
 
   def char_to_symbol(char)
     char_num = char.ord
-    print '<<'
+    @converted_program += '<<'
     while char_num != 0
       if char_num.odd?
-        print '__'
+        @converted_program += '__'
         char_num -= 1
       else
-        print '_'
+        @converted_program += '_'
         char_num -= 2
       end
 
-      print '+' if char_num != 0
+      @converted_program += '+' if char_num != 0
     end
   end
 
   def convert
-    print LAMBDA_START
+    @converted_program += LAMBDA_START
     @body_of_program.chars do |char|
       char_to_symbol(char)
     end
-    print LAMBDA_END
+    @converted_program += LAMBDA_END
   end
 
   def is_single_quote?(char)
@@ -65,6 +65,15 @@ class Converter
     rescue => e
       p e
     end
+  end
+
+  def write_file
+    @filename.insert(-4, 'Sym')
+    f = File.open(@filename, 'w') do |file|
+      file.print @converted_program
+    end
+  rescue => e
+    p e
   end
 
   def is_not_ruby_file?
